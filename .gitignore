@@ -1,0 +1,16 @@
+.idea/
+*.iml
+target/
+*.log
+*.zip
+*.gz
+*.h
+*.dll
+*.dat
+*.exe
+*.jar
+*.rar
+*.drawio.bkp
+cimp-modules/mybatis-generator/src/main/java/com/cimp/test/*
+cimp-modules/mybatis-generator/src/main/resources/mapper/*
+服务架构图.png

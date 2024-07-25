@@ -1,0 +1,27 @@
+
+@password=12345678
+GET http://localhost:8080/api/greeting HTTP/1.1
+Authorization: Basic User {{password}}
+
+###
+POST http://localhost:8080/api/greeting?name=yxt HTTP/1.1
+Authorization: Basic user {{password}}
+Content-Type: application/json
+
+{
+   "gender":"男",
+   "idNo": "2222"
+}
+
+###
+PUT http://localhost:8080/api/greeting/yxt HTTP/1.1
+Authorization: Basic user {{password}}
+
+###
+POST  http://localhost:8080/authorize/login HTTP/1.1
+Content-Type: application/json
+
+{
+   "username":"user",
+   "password":"1234578"
+}

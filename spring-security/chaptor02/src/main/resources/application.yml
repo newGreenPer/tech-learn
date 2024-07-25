@@ -1,0 +1,28 @@
+# 应用服务 WEB 访问端口
+server:
+  port: 8080
+
+logging:
+  pattern:
+    console: '%clr(%d{E HH:mm:ss.SSS}){blue} %clr(%-5p) %clr(${PID}){faint} %clr(---){faint}
+%clr([%8.15t]){cyan} %clr(%-40.40logger{0}){blue} %clr(:){red} %clr(%m){faint}%n'
+  level:
+    org:
+      springframework:
+        security: DEBUG
+    com:
+      erick: DEBUG
+
+spring:
+  application:
+    name: erick
+#  security:
+#    user:
+#      name: user
+#      password: 12345678
+#      roles:
+#        - USER
+#        - ADMIN
+  messages:
+    basename: message
+    encoding: UTF-8
