@@ -23,7 +23,7 @@ import static com.erick.security.config.SecurityConfig4.getCommonAuthenticationS
  * @author You
  * @Date 2024/7/20 17:59
  */
-@EnableWebSecurity
+//@EnableWebSecurity
 @RequiredArgsConstructor
 public class SecurityConfig5 extends WebSecurityConfigurerAdapter {
 
