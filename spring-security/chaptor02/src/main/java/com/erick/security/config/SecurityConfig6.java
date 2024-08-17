@@ -75,11 +75,11 @@ public class SecurityConfig6 extends WebSecurityConfigurerAdapter {
         auth.inMemoryAuthentication()
                 .withUser("user")
                 .password("{bcrypt}$2a$10$t7Oqdz24UBeeByV4TQtzWuCWotowxZ5LfmiUXB5rEq8ljGVXg7d2y")
-                .roles("USERS", "ADMIN")
+                .roles("USER", "ADMIN")
                 .and()
                 .withUser("zhangsan")
                 .password("{SHA-1}{gl4A2YfSPOyBAos8SeiWkU/X6R/CxdAeQZgecclbJ9Q=}427dda99c374000b8f3841b3ac810de6775bc098")
-                .roles("USERS", "ADMIN")
+                .roles("USER", "ADMIN")
         ;
     }
 

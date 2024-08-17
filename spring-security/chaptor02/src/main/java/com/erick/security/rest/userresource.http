@@ -18,6 +18,10 @@ PUT http://localhost:8080/api/greeting/yxt HTTP/1.1
 Authorization: Basic user {{password}}
 
 ###
+GET http://localhost:8080/api/principal HTTP/1.1
+Authorization: Basic user 12345678
+
+###
 POST  http://localhost:8080/authorize/login HTTP/1.1
 Content-Type: application/json
 

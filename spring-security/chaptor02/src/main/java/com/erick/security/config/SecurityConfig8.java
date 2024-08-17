@@ -8,19 +8,25 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.var;
 import org.passay.MessageResolver;
 import org.passay.spring.SpringMessageResolver;
+import org.slf4j.Logger;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.DelegatingPasswordEncoder;
 import org.springframework.security.crypto.password.MessageDigestPasswordEncoder;
+import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
@@ -32,18 +38,20 @@ import java.util.Map;
 
 import static com.erick.security.config.SecurityConfig4.getCommonAuthenticationFailureHandler;
 import static com.erick.security.config.SecurityConfig4.getCommonAuthenticationSuccessHandler;
-import static com.erick.security.config.SecurityConfig8.getLogoutSuccessHandler;
 
-/** /authorize/login和登录页 共存
+/**
+ * /authorize/login和登录页 共存
  * 两个用户，两种密码编码
+ *
  * @author You
  * @Date 2024/7/27 18:28
  */
-//@EnableWebSecurity(debug = true)
 @Slf4j
+@EnableWebSecurity(debug = true)
 @RequiredArgsConstructor
-//@Import(SecurityProblemSupport.class)
-public class SecurityConfig7 extends WebSecurityConfigurerAdapter {
+@Import(SecurityProblemSupport.class)
+@Order(99)
+public class SecurityConfig8 extends WebSecurityConfigurerAdapter {
 
     private final ObjectMapper objectMapper;
     private final MessageSource messageSource;
@@ -51,15 +59,16 @@ public class SecurityConfig7 extends WebSecurityConfigurerAdapter {
 
     /**
      * 为了PasswordConstraintValidator构造一个messageResolver
+     *
      * @return
      */
     @Bean
-    public MessageResolver messageResolver(){
+    public MessageResolver messageResolver() {
         return new SpringMessageResolver(messageSource);
     }
 
     @Bean
-    public LocalValidatorFactoryBean localValidatorFactoryBean(){
+    public LocalValidatorFactoryBean localValidatorFactoryBean() {
         LocalValidatorFactoryBean bean = new LocalValidatorFactoryBean();
         bean.setValidationMessageSource(messageSource);
         return bean;
@@ -72,26 +81,26 @@ public class SecurityConfig7 extends WebSecurityConfigurerAdapter {
                  * 异常统一处理，zalando引入
                  */
                 .requestMatchers(req -> req.mvcMatchers("/api/**", "/admin/**", "/authorize/**"))
-                .exceptionHandling(exp->
+                /**
+                 * 无状态
+                 */
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .exceptionHandling(exp ->
                         exp.authenticationEntryPoint(securityProblemSupport)
-                        .accessDeniedHandler(securityProblemSupport)
+                                .accessDeniedHandler(securityProblemSupport)
                 )
-                .authorizeRequests(a -> a.antMatchers("/authorize/**").permitAll()
-                .antMatchers("/admin/**").hasRole("ADMIN")
-                .antMatchers("/api/**").hasRole("USER")
-                .anyRequest().authenticated())
+                .authorizeRequests(req -> req
+                        .antMatchers("/authorize/**").permitAll()
+                        .antMatchers("/admin/**").hasRole("ADMIN")
+                        .antMatchers("/api/**").hasRole("USER")
+                        .anyRequest()
+                        .authenticated())
                 .addFilterAt(usernamePasswordAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
-                .csrf(csrf -> csrf.ignoringAntMatchers("/authorize/**", "/admin/**", "/api/**"))
-                .formLogin(form -> form.loginPage("/login")
-                        .usernameParameter("username1")
-                        .defaultSuccessUrl("/")
-                        .successHandler(getCommonAuthenticationSuccessHandler())
-                        .failureHandler(getCommonAuthenticationFailureHandler())
-                        .permitAll())
-                .logout(logout -> logout.logoutUrl("/perform_logout")
-                        .logoutSuccessHandler(jsonLogoutSuccessHandler())
-                )
-//                .rememberMe(r -> r.tokenValiditySeconds(86400))
+                //开启basic，用于principal测试
+                .csrf(AbstractHttpConfigurer::disable)
+//                .formLogin(AbstractHttpConfigurer::disable)
+                .httpBasic(Customizer.withDefaults())
+        ;
         ;
     }
 
@@ -110,14 +119,25 @@ public class SecurityConfig7 extends WebSecurityConfigurerAdapter {
 
     @Override
     public void configure(WebSecurity web) throws Exception {
-        web.ignoring().mvcMatchers("/public/**")
-                .requestMatchers(PathRequest.toStaticResources().atCommonLocations())
+        web.ignoring()
+                .antMatchers("/error")
         ;
     }
 
     @Bean
     LogoutSuccessHandler jsonLogoutSuccessHandler() {
         return getLogoutSuccessHandler(log);
+    }
+
+    static LogoutSuccessHandler getLogoutSuccessHandler(Logger log) {
+        return (request, response, authentication) -> {
+            if (authentication != null && authentication.getDetails() != null) {
+                request.getSession().invalidate();
+            }
+            response.setStatus(HttpStatus.OK.value());
+            response.getWriter().println();
+            log.info("成功退出登录");
+        };
     }
 
     @Bean
@@ -129,8 +149,8 @@ public class SecurityConfig7 extends WebSecurityConfigurerAdapter {
     PasswordEncoder passwordEncoder() {
         var idForDefault = "bcrypt";
         var encoders = Map.of(
-                idForDefault, new BCryptPasswordEncoder(),
-                "SHA-1", new MessageDigestPasswordEncoder("SHA-1")
+                idForDefault, new BCryptPasswordEncoder()
+                , "SHA-1", new MessageDigestPasswordEncoder("SHA-1")
         );
         return new DelegatingPasswordEncoder(idForDefault, encoders);
     }

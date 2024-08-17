@@ -1,7 +1,11 @@
 package com.erick.security.rest;
 
 import lombok.Data;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+
+import java.security.Principal;
 
 /**
  * @author You
@@ -25,6 +29,11 @@ public class UserResource {
     @PutMapping("/greeting/{name}")
     public String putGreeting(@PathVariable("name") String name){
         return "Hello put "+name;
+    }
+
+    @GetMapping("/principal")
+    public Authentication getPrincipal(){
+        return SecurityContextHolder.getContext().getAuthentication();
     }
 
     @Data
